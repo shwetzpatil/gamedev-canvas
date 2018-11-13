@@ -160,7 +160,7 @@ function draw() {
   x += dx;
   y += dy;
   //The draw() function is now getting executed again and again within a requestAnimationFrame() loop, 
-  requestAnimationFrame(draw);
+    requestAnimationFrame(draw);
 }
 // setInterval(draw, 10);
 draw();
