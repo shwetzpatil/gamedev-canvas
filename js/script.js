@@ -18,8 +18,7 @@ var brickPadding = 10;
 var brickOffsetTop = 30;
 var brickOffsetLeft = 30;
 var score = 0;
-var gameOverNotify = document.querySelector('.game-over-notify');
-var interval;
+var lives = 3;
 
 var bricks = [];
 for(var c=0; c<brickColumnCount; c++) {
@@ -29,20 +28,9 @@ for(var c=0; c<brickColumnCount; c++) {
   }
 }
 
-document.addEventListener("mousemove", mouseMoveHandler, false);
-
-function mouseMoveHandler(e) {
-  var relativeX = e.clientX - canvas.offsetLeft;
-  if(relativeX > 0 && relativeX < canvas.width) {
-      paddleX = relativeX - paddleWidth/2;
-  }
-}
-
 document.addEventListener("keydown", keyDownHandler, false);
 document.addEventListener("keyup", keyUpHandler, false);
-gameOverNotify.addEventListener("click", function() {
-  document.location.reload();
-});
+document.addEventListener("mousemove", mouseMoveHandler, false);
 
 function keyDownHandler(e) {
   if(e.keyCode == 39) {
@@ -60,6 +48,12 @@ function keyUpHandler(e) {
     leftPressed = false;
   }
 }
+function mouseMoveHandler(e) {
+  var relativeX = e.clientX - canvas.offsetLeft;
+  if(relativeX > 0 && relativeX < canvas.width) {
+    paddleX = relativeX - paddleWidth/2;
+  }
+}
 function collisionDetection() {
   for(var c=0; c<brickColumnCount; c++) {
     for(var r=0; r<brickRowCount; r++) {
@@ -70,7 +64,7 @@ function collisionDetection() {
           b.status = 0;
           score++;
           if(score == brickRowCount*brickColumnCount) {
-            alert("YOU WIN, CONGRATULATIONS!");
+            alert("YOU WIN, CONGRATS!");
             document.location.reload();
           }
         }
@@ -110,19 +104,25 @@ function drawBricks() {
     }
   }
 }
-
 function drawScore() {
   ctx.font = "16px Arial";
   ctx.fillStyle = "#0095DD";
   ctx.fillText("Score: "+score, 8, 20);
 }
+function drawLives() {
+  ctx.font = "16px Arial";
+  ctx.fillStyle = "#0095DD";
+  ctx.fillText("Lives: "+lives, canvas.width-65, 20);
+}
+
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   drawBricks();
   drawBall();
   drawPaddle();
-  collisionDetection();
   drawScore();
+  drawLives();
+  collisionDetection();
 
   if(x + dx > canvas.width-ballRadius || x + dx < ballRadius) {
     dx = -dx;
@@ -135,9 +135,18 @@ function draw() {
       dy = -dy;
     }
     else {
-      gameOverNotify.style.display = 'flex';
-      clearInterval(interval);
-      return;
+      lives--;
+      if(!lives) {
+        alert("GAME OVER");
+        document.location.reload();
+      }
+      else {
+        x = canvas.width/2;
+        y = canvas.height-30;
+        dx = 3;
+        dy = -3;
+        paddleX = (canvas.width-paddleWidth)/2;
+      }
     }
   }
 
@@ -150,6 +159,12 @@ function draw() {
 
   x += dx;
   y += dy;
+  //The draw() function is now getting executed again and again within a requestAnimationFrame() loop, 
+  requestAnimationFrame(draw);
 }
+// setInterval(draw, 10);
+draw();
 
-interval = setInterval(draw, 10);
+//but instead of the fixed 10 milliseconds frame rate, we are giving control of the framerate back to the browser. 
+//It will sync the framerate accordingly and render the shapes only when needed. 
+//This produces a more efficient, smoother animation loop than the older setInterval() method.
